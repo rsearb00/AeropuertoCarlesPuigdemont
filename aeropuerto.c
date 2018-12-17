@@ -30,37 +30,36 @@ struct usuario usuarios[10];
 
 /*fichero log*/
 
+/*declaración de funciones*/
+
+void nuevoUsuario(int sig);
 
 
 int main (int argc, char *argv[]){
 
-	if (signal(SIGUSR1, nuevoUsuario) == SIG_ERR) {
+	struct sigaction u;
+	u.sa_handler = nuevoUsuario;
+	
+	sigaction(SIGUSR1,&u,NULL);   // nuevo usuario normal
+	sigaction(SIGUSR2, &u, NULL); // nuevo usuario vip
 
-		perror("Llamada a signal.");
-		exit(-1);
+	while (1)
+	{
+		pause();
 	}
+}
 
-	if (signal(SIGUSR2, nuevoUsuario) == SIG_ERR) {
+void nuevoUsuario(int sig) {
 
-		perror("Llamada a signal.");
-		exit(-1);
+	switch (sig) {
+
+		case SIGUSR1:
+			printf("usuario normal");
+			break;
+
+		case SIGUSR2:
+			printf("usuario vip");
+			break;
 	}
 
 }
-
-void nuevoUsuario(int s) {
-
-	if (s == SIGUSR1) {
-		tipo = 0;
-		printf("Soy un usuario normal.");
-	}
-
-	if (s == SIGUSR2) {
-		tipo = 1;
-		printf("Soy un usuario vip.");
-	}
-
-}
-
-
-
