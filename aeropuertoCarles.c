@@ -7,7 +7,7 @@
 #include <sys/wait.h>
 
 /* Contador de usuarios */
-int contadorUsuarios;
+int contadorUsuarios = 0;
 
 /* Lista de usuarios */
 
@@ -16,7 +16,7 @@ struct usuario{
     int facturado;
     int atendido;
     int tipo;
-}
+};
 
 struct usuario usuarios[10];
 
@@ -29,12 +29,12 @@ int main (int argc, char const *argv[]){
     struct sigaction u;
     u.sa_handler = nuevoUsuario;
 
-    sigaction(SIGUSR1,&u,NULL);
-    sigaction(SIGUSR2,&u,NULL);
+    sigaction (SIGUSR1,&u,NULL);
+    sigaction (SIGUSR2,&u,NULL);
     
     while(1){
 
-        printf(" Esperando... \n");
+        printf ("Esperando... \n");
         pause();
     }
 
@@ -45,30 +45,29 @@ int main (int argc, char const *argv[]){
 void nuevoUsuario(int sig){
     
     /* Comprobación lista facturación */
-    for (contadorUsuarios = 0; contadorUsuarios < 10; contadorUsuarios++){
-        if (usuarios[contadorUsuarios] > 0 || usuarios[contadorUsuarios] < 10){
-               //NO ESTÁ LLENO
-                printf ("Se puede crear un nuevo usuario.\n");
-                // SEÑALES
-                switch (sig){
+    if (contadorUsuarios <= 10){
+        //NO ESTÁ LLENO
+        printf ("Se puede crear un nuevo usuario.\n");
+        // SEÑALES
+        switch (sig){
         
-                     case SIGUSR1:
-                     printf ("Nuevo usuario: Usuario normal.\n");
-                        exit(0);
+            case SIGUSR1:
+            printf ("Nuevo usuario: Usuario normal.\n");
+            contadorUsuarios++;
+            exit(0);
     
-                     case SIGUSR2:
-                     printf ("Nuevo usuario: Usuario VIP.\n");
-                     exit(0);
+            case SIGUSR2:
+            printf ("Nuevo usuario: Usuario VIP.\n");
+            contadorUsuarios++;
+            exit(0);
                         
-                     default:
-                     printf ("ERROR AL CREAR UN NUEVO USUARIO.\n");
-                }
+            default:
+            printf ("ERROR AL CREAR UN NUEVO USUARIO.\n");
         }
-        break;
-     }
-     if (usurios [contadorUsuarios] < 0 || usuarios[contadorUsuarios] > 10){
-           //ESTÁ LLENO
-           printf ("NO se puede crear un nuevo usuario.\n");
-     }
+    }
+    if (contadorUsuarios >= 10){
+        //ESTÁ LLENO
+        printf ("NO se puede crear un nuevo usuario.\n");
+    }
 return;   
 }
