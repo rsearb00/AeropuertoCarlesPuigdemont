@@ -9,6 +9,9 @@
 #include <time.h>
 #include <pthread.h>
 
+/* Semaforos */
+pthread_mutex_t semaforoUsuario;
+
 /* Contador de usuarios */
 int contadorUsuarios;
 
@@ -57,9 +60,12 @@ int main (int argc, char const *argv[]){
 
 /* Funcion que crea un nuevo usuario */
 void nuevoUsuario(int sig){
-    
+	
+    //BLOQUEAMOS LA LISTA PARA LIMITAR EL ACCESO A UN SOLO RECURSO
+	pthread_mutex_lock (&semaforoUsuario);
+	
     int i;
-	int usuario = 0;
+    int usuario = 0;
     
    for (i = 0; i <= 10; i++){
        
@@ -91,14 +97,21 @@ void nuevoUsuario(int sig){
             default:
             printf ("ERROR AL CREAR UN NUEVO USUARIO.\n");
 			
-	//HILO DEL USUARIO
+	    //HILO DE CADA USUARIO
+            /*• thread: Esta función retorna el identificador del hilo (tid) en la variable. 
+	      • attr: Si indica las características de hilo que se va a crear (NULL para utilizar los atributos por defecto ).
+	      • start: Un puntero a la función que ejecutara el hilo .
+	      • arg: Argumentos de la función*/
 			
+            int pthread_create (pthread_t *thread, pthread_attr_t *attr, void *(*start)(void *),void* arg); 
         }
      }
      else{
         // LA LISTA ESTÁ LLENA
         printf ("NO se puede crear un nuevo usuario. La lista de facturación está llena.\n");
     }
+    //DESBLOQUEAMOS LA LISTA
+    pthread_mutex_unlock (&semaforoUsuario)
    }
     
 }
