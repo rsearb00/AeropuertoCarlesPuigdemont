@@ -71,9 +71,9 @@ void nuevoUsuario(int sig){
          
         contadorUsuarios++;
 
-        nuevoUsuario.id = contadorUsuarios;
+        usuarios[i].idUsuario = contadorUsuarios;
 
-        nuevoUsuario.atendido = 0;
+        usuarios[i].atendido = 0;
          
         // SEÑALES
         switch (sig){
@@ -90,6 +90,9 @@ void nuevoUsuario(int sig){
                         
             default:
             printf ("ERROR AL CREAR UN NUEVO USUARIO.\n");
+			
+	//HILO DEL USUARIO
+			
         }
      }
      else{
