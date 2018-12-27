@@ -21,6 +21,7 @@ struct usuario{
     int facturado;
     int atendido;
     int tipo;
+    pthread_t hiloUsuario;
 };
 struct usuario usuarios[10];
 
@@ -28,6 +29,7 @@ struct usuario usuarios[10];
 /* Declaracion de funciones */
 void nuevoUsuario (int sig);
 int calculaAleatorios (int min, int max);
+void *accionesUsuario(void *usuario);
 
 int main (int argc, char const *argv[]){
 
@@ -44,6 +46,8 @@ int main (int argc, char const *argv[]){
     }
     
     //INICIALIZACIÓN DE RECURSOS
+    pthread_mutex_init(&semaforoUsuario, NULL);
+	
     contadorUsuarios = 0;
 
     int i;
@@ -98,12 +102,7 @@ void nuevoUsuario(int sig){
             printf ("ERROR AL CREAR UN NUEVO USUARIO.\n");
 			
 	    //HILO DE CADA USUARIO
-            /*• thread: Esta función retorna el identificador del hilo (tid) en la variable. 
-	      • attr: Si indica las características de hilo que se va a crear (NULL para utilizar los atributos por defecto ).
-	      • start: Un puntero a la función que ejecutara el hilo .
-	      • arg: Argumentos de la función*/
-			
-            int pthread_create (pthread_t *thread, pthread_attr_t *attr, void *(*start)(void *),void* arg); 
+            pthread_create (&usuarios[i].hiloUsuario, NULL, accionesUsuario, NULL); 
         }
      }
      else{
@@ -111,9 +110,12 @@ void nuevoUsuario(int sig){
         printf ("NO se puede crear un nuevo usuario. La lista de facturación está llena.\n");
     }
     //DESBLOQUEAMOS LA LISTA
-    pthread_mutex_unlock (&semaforoUsuario)
+    pthread_mutex_unlock (&semaforoUsuario);
    }
-    
+}
+
+void *accionesUsuario(void *usuario){
+
 }
 
 int calculaAleatorios (int min, int max){
