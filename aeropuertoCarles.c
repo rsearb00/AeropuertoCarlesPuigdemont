@@ -16,6 +16,9 @@ pthread_mutex_t semaforoUsuario;
 int contadorUsuarios;
 
 /* Lista de usuarios */
+int listaUsuarios;
+
+/* Lista de usuarios */
 struct usuario{
     int idUsuario;
     int facturado;
@@ -43,6 +46,7 @@ int main (int argc, char const *argv[]){
     pthread_mutex_init(&semaforoUsuario, NULL);
 	
     contadorUsuarios = 0;
+    listaUsuarios = 0;
 
     int i;
     for( i = 0; i <= 10; i++){
@@ -66,43 +70,38 @@ int main (int argc, char const *argv[]){
 void nuevoUsuario(int sig){
 	
     //BLOQUEAMOS LA LISTA PARA LIMITAR EL ACCESO A UN SOLO RECURSO
-	pthread_mutex_lock (&semaforoUsuario);
-	
-    int i;
-    int usuario = 0;
-    
-   for (i = 0; i < 10; i++){
-       
-     if (contadorUsuarios < 10){
+    pthread_mutex_lock (&semaforoUsuario);
+
+    if (listaUsuarios < 10){
         //LA LISTA NO ESTÁ LLENA
         printf ("Se puede crear un nuevo usuario.\n");
        
-        usuario++;
+        listaUsuarios++;
          
         contadorUsuarios++;
 
-        usuarios[i].idUsuario = contadorUsuarios;
+        usuarios[listaUsuarios].idUsuario = contadorUsuarios;
 
-        usuarios[i].atendido = 0;
+        usuarios[listaUsuarios].atendido = 0;
          
         // SEÑALES
         switch (sig){
         
             case SIGUSR1:
             printf ("Nuevo usuario: Usuario normal.\n");
-            usuarios[i].tipo = 0;
+            usuarios[listaUsuarios].tipo = 0;
             break;
     
             case SIGUSR2:
             printf ("Nuevo usuario: Usuario VIP.\n");
-            usuarios[i].tipo = 1;
+            usuarios[listaUsuarios].tipo = 1;
             break;
                         
             default:
             printf ("ERROR AL CREAR UN NUEVO USUARIO.\n");
         } 		
 	//HILO DE CADA USUARIO
-        pthread_create (&usuarios[i].hiloUsuario, NULL, accionesUsuario, NULL); 
+        pthread_create (&usuarios[listaUsuarios].hiloUsuario, NULL, accionesUsuario, NULL); 
      }
      else{
         // LA LISTA ESTÁ LLENA
