@@ -109,7 +109,7 @@ void nuevoUsuario(int sig){
     }
     //DESBLOQUEAMOS LA LISTA
     pthread_mutex_unlock (&semaforoUsuario);
-   }
+   
 }
 
 void *accionesUsuario(void *usuario){
