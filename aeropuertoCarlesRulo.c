@@ -119,19 +119,89 @@ void nuevoUsuario(int sig){
 }
 
 void *accionesUsuario(void *user){
-	//char *entrada="User creado";
+	//Escribe en el log
+	pthread_mutex_lock(&semaforoLog);
+	char *entrada="User creado";
 	//char *tipo=(char *)usuarios[*(int *)usuario].tipo;
 	//writeLogMessage((char *)usuarios[*(int *)usuario].tipo, entrada);
 	//writeLogMessage(tipo, entrada);
+	pthread_mutex_unlock(&semaforoLog);
+	
 	int posLista= *(int *) user;
 	sleep(4);
-	if(usuarios[posLista].atendido==0){
-		printf("Hola, estoy esperando");
+	while(usuarios[posLista].atendido!=1){
+		int num=calculaAleatorios(1,10);
+		if  (num<=2){
+			//escribir en el log que se va por cansancio
+			pthread_mutex_lock(&semaforoLog);
+			char *cansancio="User cansado";
+			//char *tipo=(char *)usuarios[*(int *)usuario].tipo;
+			pthread_mutex_unlock(&semaforoLog);
+	
+			//Bloqueamos para disminuir la variable global de la lista de usuarios
+			pthread_mutex_lock(&semaforoUsuario);
+			listaUsuarios--;
+			pthread_mutex_unlock(&semaforoUsuario);
+			
+			//El hilo se cierra
+			pthread_exit(NULL);
+		}
+		int banyo=calculaAleatorios(1,10);
+		if(banyo==1){
+			//escribir en el log que se va al baño
+			pthread_mutex_lock(&semaforoLog);
+			char *cansancio="User va al baño";
+			//char *tipo=(char *)usuarios[*(int *)usuario].tipo;
+			pthread_mutex_unlock(&semaforoLog);
+	
+			//Bloqueamos para disminuir la variable global de la lista de usuarios
+			pthread_mutex_lock(&semaforoUsuario);
+			listaUsuarios--;
+			pthread_mutex_unlock(&semaforoUsuario);
+			
+			//El hilo se cierra
+			pthread_exit(NULL);		
+		}
+		/*else{//Baño
+			int banyo=calculaAleatorios(1,10);
+			while(banyo!=1){
+				sleep(3);
+			}
+		}	*/
+		else{
+			sleep(3);
+		}
 	}
-	else{
-		printf("Hola, estoy siendo atendido");
+
+	//Espera mientras le atienden en facturación
+	while(usuarios[posLista].atendido==1){
+		//Espera a qu
 	}
-	pthread_exit(NULL);
+	//Espera mientras pasa el control
+	if(usuarios[posLista].facturado==1){
+		//Ha facturado, tiene que esperar al control
+		//Libera la cola de facturación
+		pthread_mutex_lock(&semaforoUsuario);
+		listaUsuarios--;
+		pthread_mutex_unlock(&semaforoUsuario);
+		
+	}	
+	else if(usuarios[posLista].facturado==0){
+		//No ha facturado
+		//Libera la cola de facturación
+		pthread_mutex_lock(&semaforoUsuario);
+		listaUsuarios--;
+		pthread_mutex_unlock(&semaforoUsuario);
+		
+		pthread_mutex_lock(&semaforoLog);
+		char *cansancio="User no pasa";
+		//char *tipo=(char *)usuarios[*(int *)usuario].tipo;
+		//writeLogMessage((char *)usuarios[*(int *)usuario].tipo, entrada);
+		//writeLogMessage(tipo, entrada);
+		pthread_mutex_unlock(&semaforoLog);
+		pthread_exit(NULL);
+	}
+	//pthread_exit(NULL);
 }
 
 int calculaAleatorios (int min, int max){
@@ -140,8 +210,6 @@ int calculaAleatorios (int min, int max){
 }
 
 void writeLogMessage(char *id, char *msg){
-	/*bloqueamos la función con el mutex*/
-	pthread_mutex_lock(&semaforoLog);
 	
 	/*Calculamos la hora*/
 	time_t now = time(0);
@@ -158,6 +226,4 @@ void writeLogMessage(char *id, char *msg){
 	fprintf(logFile, "[%s] %s: %s:\n", stnow, id, msg);
 	fclose(logFile);
 
-	/*Desbloqueamos el mutex*/	
-	pthread_mutex_unlock(&semaforoLog);
 }
