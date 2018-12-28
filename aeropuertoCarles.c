@@ -39,12 +39,6 @@ int main (int argc, char const *argv[]){
     sigaction (SIGUSR1,&u,NULL);
     sigaction (SIGUSR2,&u,NULL);
     
-    while(1){
-
-        printf ("Esperando... \n");
-        pause();
-    }
-    
     //INICIALIZACIÓN DE RECURSOS
     pthread_mutex_init(&semaforoUsuario, NULL);
 	
@@ -58,7 +52,13 @@ int main (int argc, char const *argv[]){
     	usuarios[i].atendido = 0;
     	usuarios[i].tipo = 0;
     }
+	
+    while(1){
 
+        printf ("Esperando... \n");
+        pause();
+    }
+	
     return 0;
 }
 
@@ -71,9 +71,9 @@ void nuevoUsuario(int sig){
     int i;
     int usuario = 0;
     
-   for (i = 0; i <= 10; i++){
+   for (i = 0; i < 10; i++){
        
-     if (contadorUsuarios <= 10){
+     if (contadorUsuarios < 10){
         //LA LISTA NO ESTÁ LLENA
         printf ("Se puede crear un nuevo usuario.\n");
        
