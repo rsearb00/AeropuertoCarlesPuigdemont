@@ -100,10 +100,9 @@ void nuevoUsuario(int sig){
                         
             default:
             printf ("ERROR AL CREAR UN NUEVO USUARIO.\n");
-			
-	    //HILO DE CADA USUARIO
-            pthread_create (&usuarios[i].hiloUsuario, NULL, accionesUsuario, NULL); 
-        }
+        } 		
+	//HILO DE CADA USUARIO
+        pthread_create (&usuarios[i].hiloUsuario, NULL, accionesUsuario, NULL); 
      }
      else{
         // LA LISTA ESTÁ LLENA
