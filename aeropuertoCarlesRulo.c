@@ -11,7 +11,6 @@
 
 /* Semaforos */
 pthread_mutex_t semaforoUsuario;
-
 pthread_mutex_t semaforoLog;
 
 /* Contador de usuarios */
@@ -65,7 +64,8 @@ int main (int argc, char const *argv[]){
     }
 	
     while(1){
-
+	printf("Introduce `kill -10 PID' si lo que quieres es introducir un usuario normal a la lista.\n")
+	printf("Introduce `kill -12 PID' si lo que quieres es introducir un usuario VIP a la lista.\n");
         printf ("Esperando... \n");
         pause();
     }
@@ -74,7 +74,7 @@ int main (int argc, char const *argv[]){
 }
 
 /* Funcion que crea un nuevo usuario */
-void nuevoUsuario(int sig){
+void nuevoUsuario (int sig){
 	
     //BLOQUEAMOS LA LISTA PARA LIMITAR EL ACCESO A UN SOLO RECURSO
     pthread_mutex_lock (&semaforoUsuario);
@@ -92,12 +92,12 @@ void nuevoUsuario(int sig){
         
             case SIGUSR1:
             printf ("Nuevo usuario: Usuario normal.\n");
-            usuarios[listaUsuarios].tipo = 0;
+            usuarios[listaUsuarios].tipo = 1;
 	    break;
     
             case SIGUSR2:
             printf ("Nuevo usuario: Usuario VIP.\n");
-            usuarios[listaUsuarios].tipo = 1;
+            usuarios[listaUsuarios].tipo = 2;
             break;
                         
             default:
