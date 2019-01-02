@@ -11,12 +11,16 @@
 /* Semaforos */
 pthread_mutex_t semaforoUsuario;
 pthread_mutex_t semaforoLog;
+pthread_mutex_t semaforoSeguridad;
 
 /*contador de usuarios*/
 int contadorUsuarios;
 
 /* Lista de usuarios */
 int listaUsuarios;
+
+/*Guarda el usuario que está pasando el control de seguridad*/
+int usuarioEnControl;
 
 struct usuario{
     int idUsuario;
@@ -141,18 +145,27 @@ void *accionesUsuario(void *user){
 		//Ha facturado, tiene que esperar al control
 		//Libera la cola de facturación
 		pthread_mutex_lock(&semaforoUsuario);
+		int idSeg=usuarios[posLista].idUsuario;
 		listaUsuarios--;
-		pthread_mutex_unlock(&semaforoUsuario);
 
-		
-
-		/*char embarca[30]; 
+		//Entra al control
+		usuarioEnControl=idSeg;
+		while(usuarioEnControl==idSeg){
+			sleep(1);
+		}
+		//¿El de seguridad pone usuarioEnControl a 0?
+		char embarca[30];
+		char dejaControl[50]; 
+		sprintf(dejaControl, "Ha pasado el control de seguridad");
 		sprintf(embarca, "Ha embarcado");
+		
+		//Puede que sobren estos, al estar ya dentro del de usuario
 		pthread_mutex_lock(&semaforoLog);
+		writeLogMessage(usuario, dejaControl);
 		writeLogMessage(usuario, embarca);
-		pthread_mutex_unlock(&semaforoLog);*/
+		pthread_mutex_unlock(&semaforoLog);
 
-		//Libera el control
+		pthread_mutex_unlock(&semaforoUsuario);	
 	}
 	else if(usuarios[posLista].facturado==0){
 		//No ha facturado
@@ -171,20 +184,6 @@ void *accionesUsuario(void *user){
 		//El hilo se cierra
 		pthread_exit(NULL);
 	}
-		
-	/*Al incrementarlo en la funcion que crea users, aquí la posicion de la lista llega como +1
-	Hay que guardarlo como -1 para acceder al usuario real que hemos creado*/
-	/*int posLista= *(int *) user-1;
-	printf("Creado usuario num %d\n", usuarios[posLista].idUsuario);
-	pthread_mutex_lock(&semaforoLog);
-	char *entrada="User creado";*/
-	//char *tipo=(char *)usuarios[*(int *)usuario].tipo;
-	//writeLogMessage((char *)usuarios[*(int *)usuario].tipo, entrada);
-	//writeLogMessage(tipo, entrada);
-	/*pthread_mutex_unlock(&semaforoLog);*/
-	
-	
-	//pthread_exit(NULL);
 }
 
 int main(int argc, char const *argv[])
@@ -194,6 +193,8 @@ int main(int argc, char const *argv[])
     contadorUsuarios = 0;
     listaUsuarios = 0;
     pthread_mutex_init(&semaforoUsuario, NULL);
+    pthread_mutex_init(&semaforoLog, NULL);
+    pthread_mutex_init(&semaforoSeguridad, NULL);
     int i;
     for( i = 0; i < 10; i++){
 
