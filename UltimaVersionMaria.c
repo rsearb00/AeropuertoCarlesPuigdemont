@@ -58,17 +58,17 @@ void writeLogMessage(char *id, char *msg);
 int calculaAleatorios (int min, int max, int id);
 
 /*Función de los hilos facturadores*/
-void *HiloFacturador(void *idFacturador){
+void *HiloFacturador(void *tipoFacturador){
 	//Esto solo lo puse para ver en la terminal que se crea el facturador 
 	//printf("%s\n", (char *) arg);
 
-	int facturador = (intptr_t)idFacturador;
+	//int facturador = (intptr_t)idFacturador;
 
-	//int facturador=* (int *)idFacturador;
+	int facturador=* (int *)tipoFacturador;
 
 	char identificadorFacturador[30];
 	char mensaje[50];
-	sprintf(identificadorFacturador, "Facturador de tipo %d", facturador);
+	sprintf(identificadorFacturador, "Facturador %d",facturador);
 	sprintf(mensaje, "comienza a atender usuarios");
 	writeLogMessage(identificadorFacturador, mensaje);
 
@@ -77,24 +77,184 @@ void *HiloFacturador(void *idFacturador){
 	int usuarioAtendido;
 	
 	while(1){
+	int posicion;
 	/*Mientras el facturador esta ocupado*/
 		while(facturadores[facturador].ocupado==0){
 
 		//BLOQUEAMOS LA LISTA PARA LIMITAR EL ACCESO A UN SOLO RECURSO
     			pthread_mutex_lock (&semaforoUsuario);
-		int i;	
+		int i;
+		//El seleccionador es el que va a comprobar cual es el hilo que mas ha esperado en 			la cola
+		int seleccionador=999999;	
 		//Recorremos la lista de vehículos
 			for( i = 0; i < 10; i++){
 
 				if(usuarios[i].idUsuario != 0 && facturadores[facturador].tipoFacturador == usuarios[i].tipo 
 			&& usuarios[i].atendido == 0 && usuarios[i].facturado==0){
-				
+
+				     if(usuarios[i].idUsuario<seleccionador){
+					
+					usuarioAtendido=usuarios[i].idUsuario;
+					 posicion=i;
+
+					//El usuario esta siendo atendido por el facturador
+					usuarios[posicion].atendido = 1;
+
+					//El facturador esta atendiendo a un usuario
+					facturadores[facturador].ocupado = 1;
+						seleccionador = usuarios[i].idUsuario;
+				//DESBLOQUEAMOS LA LISTA
+    			pthread_mutex_unlock (&semaforoUsuario);
+			
+				     }
 
 				}
 		
+			} 
+			//No se encontro usuario del tipo al que atender
+
+			if(facturadores[facturador].ocupado = 0){
+			     for(i = 0; i < 10; i++){
+
+				if(usuarios[i].idUsuario != 0 && usuarios[i].atendido == 0 && usuarios[i].facturado==0){
+
+				    if(usuarios[i].idUsuario < seleccionador){
+	
+					usuarioAtendido=usuarios[i].idUsuario;
+					posicion=i;
+
+					//El usuario esta siendo atendido por el facturador
+					usuarios[posicion].atendido = 1;
+
+					//El facturador esta atendiendo a un usuario
+					facturadores[facturador].ocupado = 1;
+					
+					//DESBLOQUEAMOS LA LISTA
+    			pthread_mutex_unlock (&semaforoUsuario);	
+				    }
+				}
+			     }
 			}
+			//DESBLOQUEAMOS LA LISTA
+    			pthread_mutex_unlock (&semaforoUsuario);
+			
+			if(facturadores[facturador].ocupado = 0){
+			
+				sleep(1);
+
+			}
+		}
+
+
+		//Inicio de la facturacion en el log
+
+		char comienzoFacturacion[30];
+		char mensaje1[50];
+		sprintf(comienzoFacturacion, "Facturacion usuario %d, ",usuarioAtendido);
+		sprintf(mensaje1, "inicio facturacion.");
+		writeLogMessage(comienzoFacturacion, mensaje1);
+
+		
+		//Contamos los usuarios		
+		int i=0;
+		int posLista;
+		
+		do{
+		      if(usuarios[i].idUsuario==0){
+			posLista=i;
+		      }
+	        i++;
+		}while(i<10);
+
+		//Tipos de facturaciones
+		int num=calculaAleatorios(1,10,posLista);
+		//Si sale un 8, pertenece al 80% de facturacion correcta, y espera para despues ir al control de seguridad
+		if(num<=8){
+		
+		srand(time(NULL));
+		int correcto= rand() % (4-1+1) +1;
+		
+		//Fin de la facturacion correcta en el log
+		char facturacionCorrecta[30];
+		char mensaje2[50];
+		sprintf(facturacionCorrecta, "Fin facturacion usuario %d, ",usuarioAtendido);
+		sprintf(mensaje2, "ha sido correcta. Ha tardado %d segundos.", correcto);
+		writeLogMessage(facturacionCorrecta, mensaje2);
+
+		//Espera el tiempo necesario para facturar
+		sleep(correcto);
+		
+		//Va al control de seguridad
 
 		}
+		//Si sale un 9, pertenece a un 10% que posee exceso de peso, espera mas tiempo y va al control de seguridad
+		else if(num=9){
+
+		srand(time(NULL));
+		int peso= rand() % (6-2+1) +2;
+
+		//Fin de la facturacion con exceso de peso en el log
+		char facturacionPeso[30];
+		char mensaje3[50];
+		sprintf(facturacionPeso, "Fin facturacion usuario %d, ",usuarioAtendido);
+		sprintf(mensaje3, "con exceso de peso. Ha tardado %d segundos.", peso);
+		writeLogMessage(facturacionPeso, mensaje3);
+
+		//Espera el tiempo necesario para facturar
+		sleep(peso);
+		//Va al control de seguridad
+		}
+		//Si sale un 10, no tiene su visado en regla, espera mucho mas y no pasa el control de seguridad, deja hueco en la cola
+		else if(num=10){
+		srand(time(NULL));
+		int visado= rand() % (10-6+1) +6;
+
+		//Espera el tiempo necesario para facturar
+		sleep(visado);
+		//Bloqueamos para disminuir la variable global de la lista de usuarios
+			pthread_mutex_lock(&semaforoUsuario);
+			listaUsuarios--;
+			pthread_mutex_unlock(&semaforoUsuario);
+
+		//Fin de la facturacion con exceso de peso en el log
+		char facturacionIncorrecta[30];
+		char mensaje4[50];
+		sprintf(facturacionIncorrecta, "Fin facturacion usuario %d, ",usuarioAtendido);
+		sprintf(mensaje4, "con visado incorrecto. Ha tardado %d segundos en dejar un hueco en la cola.", visado);
+		writeLogMessage(facturacionIncorrecta, mensaje4);
+
+		
+		}
+
+		pthread_mutex_lock(&semaforoUsuario);
+		usuarios[posicion].facturado=1;
+		pthread_mutex_unlock(&semaforoUsuario);
+
+		facturadores[facturador].usuariosAtendidos+=1;
+
+		//Comprobar si descansa el facturador
+		if(facturadores[facturador].usuariosAtendidos % 5 == 0){
+
+			//Inicio del descanso en el log
+			char inicioDescanso[30];
+		char mensaje5[50];
+		sprintf(inicioDescanso, "Facturador %d, ",facturadores[facturador].tipoFacturador);
+		sprintf(mensaje5, "se toma un descanso.");
+		writeLogMessage(inicioDescanso, mensaje5);
+
+			facturadores[facturador].ocupado = 1;
+			sleep(10);
+
+			//Fin del descanso en el log
+			char finDescanso[30];
+		char mensaje6[50];
+		sprintf(finDescanso, "Facturador %d, ",facturadores[facturador].tipoFacturador);
+		sprintf(mensaje6, "finaliza su descanso.");
+		writeLogMessage(finDescanso, mensaje6);
+			
+		}
+
+		facturadores[facturador].ocupado = 0;
 	
 	}
 	
@@ -268,8 +428,8 @@ int main(int argc, char const *argv[])
     int normal=1;
     int VIP=2;
 
-    pthread_create(&facturadores[0].hiloFacturador, NULL, HiloFacturador, (void *)&normal);
-    pthread_create(&facturadores[1].hiloFacturador, NULL, HiloFacturador, (void *)&VIP);	
+    pthread_create(&facturadores[0].hiloFacturador, NULL, HiloFacturador, (void *)&facturadores[0].tipoFacturador);
+    pthread_create(&facturadores[1].hiloFacturador, NULL, HiloFacturador, (void *)&facturadores[1].tipoFacturador);	
 
 /*  pthread_create(&facturador1, NULL, HiloFacturador, "Creado el facturador 1");
     pthread_create(&facturador2, NULL, HiloFacturador, "Creado el facturador 2");*/
