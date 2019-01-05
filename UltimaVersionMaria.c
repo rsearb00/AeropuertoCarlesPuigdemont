@@ -86,7 +86,7 @@ void *HiloFacturador(void *tipoFacturador){
 		int i;
 		//El seleccionador es el que va a comprobar cual es el hilo que mas ha esperado en 			la cola
 		int seleccionador=999999;	
-		//Recorremos la lista de vehículos
+		//Recorremos la lista de usuarios
 			for( i = 0; i < 10; i++){
 
 				if(usuarios[i].idUsuario != 0 && facturadores[facturador].tipoFacturador == usuarios[i].tipo 
