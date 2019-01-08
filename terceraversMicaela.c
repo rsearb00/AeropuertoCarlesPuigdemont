@@ -69,16 +69,17 @@ void *accionesUsuario(void *user);
 void nuevoUsuario(int sig);
 void writeLogMessage(char *id, char *msg);
 int calculaAleatorios (int min, int max, int id);
-
-
+void salirPrograma();
 
 int main(int argc, char const *argv[])
 {
 
 	/*señales de usuario*/
+    struct sigaction u;
     signal(SIGUSR1, nuevoUsuario); 
     signal(SIGUSR2, nuevoUsuario);
-
+    sigaction(SIGINT, &u, NULL);
+    u.sa_handler = salirPrograma;
 
 	// Inicialización de los recursos:
 
@@ -662,4 +663,30 @@ int calculaAleatorios (int min, int max, int id){
 
    srand (time(NULL)*id);
    return rand() % (max-min+1) +min;
+}
+
+void salirPrograma(){
+
+	int i;
+	char tipoFacturador[100];
+	char FraseUsuariosAtendidos[100];
+
+	/* Se escribe en el log por cada facturador*/
+	for(i=0; i< 2; i++){
+
+		sprintf(tipoFacturador, "Facturador: %d ", facturadores[i].tipoFacturador+1);
+		sprintf(FraseUsuariosAtendidos, "He atendido a %d usuarios al final del día.", usuarios[i].atendido);
+		writeLogMessage(tipoFacturador, FraseUsuariosAtendidos);
+	}
+
+	/* Al finalizar se escribe en el log*/
+	char aeropuertoCarles[100];
+	char fin[100];
+	sprintf(aeropuertoCarles, "Aeropuerto Carles Puigdemont:");
+	sprintf(fin, "Es hora de abandonar el aeropuerto, la facturación por hoy a llegado a su fin.");
+	writeLogMessage(aeropuertoCarles, fin);
+	
+	/* Finalización del programa */
+	signal(SIGINT, SIG_DFL);
+	raise(SIGINT);
 }
